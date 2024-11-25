@@ -36,6 +36,9 @@ def initialiser_partie(idul, secret):
     url = f"{URL}partie/"
     auth = (idul, secret)
     response = requests.post(url, auth=auth)
+    data = response.json()
+
+    print("Réponse de l'API :", data)
 
     if response.status_code == 401:
         raise PermissionError(response.json().get("message", "Accès refusé."))
