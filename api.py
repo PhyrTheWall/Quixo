@@ -10,7 +10,7 @@ Functions:
     * récupérer_une_partie - Retrouve l'état d'une partie spécifique.
 """
 
-import request
+import requests
 
 URL = "https://pax.ulaval.ca/quixo/api/a24/"
 
