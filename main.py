@@ -1,38 +1,27 @@
-from api import QuixoAPI
-from quixo import QuixoGame
+from api import initialiser_partie, jouer_un_coup
+from quixo import Quixo, interpréter_la_commande
 
-def main():
-    idul = input("Entrez votre IDUL: ")
-    token = input("Entrez votre jeton d'authentification: ")
-    api = QuixoAPI(idul, token)
 
-    try:
-        # Créer une nouvelle partie
-        game_id, initial_state, winner = api.create_game()
-        print("Nouvelle partie créée!")
-        
-        game = QuixoGame(initial_state["joueurs"], initial_state["plateau"])
-        game.display_board()
+SECRET = "b0bda578-f449-4cea-8589-82f13e3cf57e"
 
-        # Boucle de jeu
-        while not game.is_winner(winner):
-            origin, direction = game.get_move()
-            if not origin or not direction:
-                print("Coup invalide, réessayez.")
-                continue
-
-            # Jouer le coup
-            try:
-                game_id, new_state, winner = api.play_move(game_id, origin, direction)
-                game.update_board(new_state["plateau"])
-                game.display_board()
-            except ValueError as e:
-                print(e)
-                continue
-
-        print("Partie terminée!")
-    except ValueError as e:
-        print(f"Erreur: {e}")
 
 if __name__ == "__main__":
-    main()
+    args = interpréter_la_commande()
+    id_partie, joueurs, plateau = initialiser_partie(args.idul, SECRET)
+    while True:
+        # Créer un instance Quixo
+        quixo = Quixo(joueurs, plateau)
+        # Afficher la partie
+        print(quixo)
+        # Demander au joueur de choisir son prochain coup
+        origine, direction = quixo.choisir_un_coup()
+        # Envoyer le coup au serveur
+        id_partie, joueurs, plateau = jouer_un_coup(
+            id_partie,
+            origine,
+            direction,
+            args.idul,
+            SECRET,
+        )
+    
+    
