@@ -16,6 +16,7 @@ from plateau import Plateau
 
 
 class Quixo:
+    """Classe representant le jeux de quixo..."""
     def __init__(self, joueurs, plateau=None) -> None:
         """Constructeur de la classe Quixo
 
@@ -54,7 +55,10 @@ class Quixo:
         Returns:
             str: Une représentation en chaîne de caractères du plateau.
         """
-        pass
+        return ("Légende:\n"
+                + f"   X={self.état_partie()['joueurs'][0]}\n"
+                + f"   O={self.état_partie()['joueurs'][1]}\n"
+                + f"{Plateau(self.état_partie()['plateau'])}")
 
     def déplacer_pion(self, pion, origine, direction):
         """Déplacer un pion dans une direction donnée.
@@ -66,7 +70,7 @@ class Quixo:
             origine (list[int]): La position (x, y) du pion sur le plateau.
             direction (str): La direction du déplacement, soit "haut", "bas", "gauche" ou "droite".
         """
-        pass
+        self.plateau.insérer_un_cube(pion, origine, direction)
 
     def choisir_un_coup(self):
         """Demander le prochain coup à jouer au joueur.
@@ -87,17 +91,30 @@ class Quixo:
             Donnez la position d'origine du bloc (x,y) :
             Quelle direction voulez-vous insérer? ('haut', 'bas', 'gauche', 'droite') :
         """
-        pass
+        directions_valide = ['haut', 'bas', 'gauche', 'droite']
 
+        ori = input("Donnez la position d'origine du bloc (x,y) :")
+        origine = [int(ori[0]), int(ori[2])]
+        direction = input("Direction d'insertion du bloc?"
+                          " ('haut', 'bas', 'gauche', 'droite') :")
+
+        if (origine[0] or origine[1]) > 5 or (origine[0] or origine[1]) < 1:
+            raise QuixoError("Les positions x et y doivent être entre 1 et 5 inclusivement.")
+        if direction not in directions_valide:
+            raise QuixoError('La direction doit être "haut", "bas", "gauche" ou "droite".')
+
+        return origine, direction
 
 def interpréter_la_commande():
     """Génère un interpréteur de commande.
     Returns:
         Namespace: Un objet Namespace tel que retourné par parser.parse_args().
-            Cet objet aura l'attribut «idul» représentant l'idul du joueur.
+            Cet objet aura l'attribut «idul» représentant l'idul du joueur
+            et l'attribut «parties» qui est un booléen True/False.
     """
-    parser = argparse.ArgumentParser()
-
+    parser = argparse.ArgumentParser(description="Quixo")
+    parser.add_argument('idul', type=str, help= 'IDUL du joueur')
+    parser.add_argument('parties', action="store_true", help='Parties en cours')
     # Complétez le code ici
     # vous pourriez aussi avoir à ajouter des arguments dans ArgumentParser(...)
 
