@@ -10,6 +10,8 @@ from quixo_error import QuixoError
 
 
 class Plateau:
+    """docstring...
+"""
     def __init__(self, plateau=None):
         """Constructeur de la classe Plateau
 
@@ -41,7 +43,18 @@ class Plateau:
         Returns:
             str: Une représentation en chaîne de caractères du plateau.
         """
-        pass
+        return ("   -------------------\n"
+                + "1 | " + " | ".join(self.plateau[0]) + " |\n"
+                + "  |---|---|---|---|---|\n"
+                + "2 | " + " | ".join(self.plateau[1]) + " |\n"
+                + "  |---|---|---|---|---|\n"
+                + "3 | " + " | ".join(self.plateau[2]) + " |\n"
+                + "  |---|---|---|---|---|\n"
+                + "4 | " + " | ".join(self.plateau[3]) + " |\n"
+                + "  |---|---|---|---|---|\n"
+                + "5 | " + " | ".join(self.plateau[4]) + " |\n"
+                + "--|---|---|---|---|---|\n"
+                + "  | 1   2   3   4   5 |\n")
 
     def __getitem__(self, position):
         """Retourne la valeur à la position donnée
@@ -55,7 +68,11 @@ class Plateau:
         Raises:
             QuixoError: Les positions x et y doivent être entre 1 et 5 inclusivement.
         """
-        pass
+        x, y = position
+        if (x or y) > 5 or (x or y) < 1:
+            raise QuixoError(" Les positions x et y doivent"
+                             + "être entre 1 et 5 inclusivement.")
+        return self.plateau[y-1][x-1]
 
     def __setitem__(self, position, valeur):
         """Modifie la valeur à la position donnée
@@ -68,7 +85,14 @@ class Plateau:
             QuixoError: Les positions x et y doivent être entre 1 et 5 inclusivement.
             QuixoError: Valeur du cube invalide.
         """
-        pass
+        valeurs = ["X", "O", " "]
+        x, y = position
+        if (x or y) > 5 or (x or y) < 1:
+            raise QuixoError(" Les positions x et y doivent"
+                             + "être entre 1 et 5 inclusivement.")
+        if valeur not in valeurs:
+            raise QuixoError("Valeur du cube invalide.")
+        self.plateau[y-1][x-1] = valeur
 
     def générer_le_plateau(self, plateau):
         """Génère un plateau de jeu
@@ -88,7 +112,27 @@ class Plateau:
             QuixoError: Format du plateau invalide.
             QuixoError: Valeur du cube invalide.
         """
-        pass
+        if plateau is None:
+            return [[" ", " ", " ", " ", " "],
+                    [" ", " ", " ", " ", " "],
+                    [" ", " ", " ", " ", " "],
+                    [" ", " ", " ", " ", " "],
+                    [" ", " ", " ", " ", " "]]
+
+        pions_valides = ["X", "O", " "]
+        # liste de tous les caracteres dans le plateau qui sont valides
+        for lignes in plateau:
+            for pion in lignes:
+                if pion in pions_valides:
+                    continue
+                raise QuixoError("Valeur du cube invalide.")
+        # verification des dimentions
+        if len(plateau) != 5:
+            raise QuixoError("Format de plateau invalide.")
+        for lignes in range(5):
+            if len(plateau[lignes]) != 5:
+                raise QuixoError("Format de plateau invalide.")
+        return plateau
 
     def insérer_un_cube(self, cube, origine, direction):
         """Insère un cube dans le plateau
@@ -108,7 +152,20 @@ class Plateau:
             QuixoError: La direction doit être "haut", "bas", "gauche" ou "droite".
             QuixoError: Le cube à insérer ne peut pas être vide.
         """
-        pass
+        directions_possibles = ["haut", "bas", "gauche", "droite"]
+        if direction not in directions_possibles:
+            raise QuixoError('La direction doit être "haut",'
+                             +' "bas", "gauche" ou "droite".')
+        if cube == " ":
+            raise QuixoError("Le cube à insérer ne peut pas être vide.")
+        if direction == "bas":
+            self.insérer_par_le_bas(cube, origine)
+        if direction == "haut":
+            self.insérer_par_le_haut(cube, origine)
+        if direction == "gauche":
+            self.insérer_par_la_gauche(cube, origine)
+        if direction == "droite":
+            self.insérer_par_la_droite(cube, origine)
 
     def insérer_par_le_bas(self, cube, origine):
         """Insère un cube dans le plateau en direction du bas
@@ -117,7 +174,11 @@ class Plateau:
             cube (str): La valeur du cube à insérer, soit "X" ou "O".
             origine (list[int]): La position [x, y] d'origine du cube à insérer.
         """
-        pass
+        x, y = origine[0], origine[1]
+        plat = self
+        for i in range(y, 5):
+            self[(x, i)] = plat[(x, i + 1)]
+        self[(x, 5)] = cube
 
     def insérer_par_le_haut(self, cube, origine):
         """Insère un cube dans le plateau en direction du haut
@@ -126,7 +187,11 @@ class Plateau:
             cube (str): La valeur du cube à insérer, soit "X" ou "O".
             origine (list[int]): La position [x, y] d'origine du cube à insérer.
         """
-        pass
+        x, y = origine
+        plat = self
+        for i in range(y, 1, -1):
+            self[(x, i)] = plat[(x, i - 1)]
+        self[(x ,1)] = cube
 
     def insérer_par_la_gauche(self, cube, origine):
         """Insère un cube dans le plateau en direction de la gauche
@@ -135,7 +200,11 @@ class Plateau:
             cube (str): La valeur du cube à insérer, soit "X" ou "O".
             origine (list[int]): La position [x, y] d'origine du cube à insérer.
         """
-        pass
+        x, y = origine[0], origine[1]
+        plat = self
+        for i in range(x, 1, -1):
+            self[(i, y)] = plat[(i - 1, y)]
+        self[(1,y)] = cube
 
     def insérer_par_la_droite(self, cube, origine):
         """Insère un cube dans le plateau en direction de la droite
@@ -144,4 +213,8 @@ class Plateau:
             cube (str): La valeur du cube à insérer, soit "X" ou "O".
             origine (list[int]): La position [x, y] d'origine du cube à insérer.
         """
-        pass
+        x, y = origine[0], origine[1]
+        plat = self
+        for i in range(x, 5):
+            self[(i, y)] = plat[(i + 1, y)]
+        self[(5,y)] = cube
