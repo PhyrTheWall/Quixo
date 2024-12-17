@@ -1,0 +1,73 @@
+from quixo import Quixo, QuixoError
+import random
+
+class QuixoIA(Quixo):
+    def lister_les_coups_possibles(self, plateau, cube):
+        if cube not in ["X", "O"]:
+            raise QuixoError('Le cube doit être "X" ou "O".')
+        if self.partie_terminée():
+            raise QuixoError("La partie est déjà terminée.")
+        
+        coups = []
+        for i in range(5):
+            for j in range(5):
+                if plateau[i][j] in [cube, " "]:  # Cube valide ou vide
+                    if i == 0 or i == 4 or j == 0 or j == 4:  # Bords ou coins
+                        directions = self.obtenir_directions_valides(i, j)
+                        for direction in directions:
+                            coups.append({"origine": [i, j], "direction": direction})
+        return coups
+    
+    def analyser_le_plateau(self, plateau):
+        resultats = {"X": {2: 0, 3: 0, 4: 0, 5: 0}, "O": {2: 0, 3: 0, 4: 0, 5: 0}}
+        joueurs = ["X", "O"]
+        
+        for joueur in joueurs:
+            lignes = self.compter_lignes(plateau, joueur)
+            for taille, nombre in lignes.items():
+                resultats[joueur][taille] = nombre
+        
+        return resultats
+
+    def partie_terminée(self):
+        vainqueur = self.determiner_vainqueur()
+        return vainqueur
+
+    def trouver_un_coup_vainqueur(self, cube):
+        for coup in self.lister_les_coups_possibles(self.plateau, cube):
+            self.deplacer_un_cube(coup["origine"], coup["direction"])
+            if self.determiner_vainqueur() == cube:
+                self.annuler_deplacement()  # Réinitialiser pour l'analyse
+                return coup
+        return None
+    
+    def trouver_un_coup_bloquant(self, cube):
+        adversaire = "O" if cube == "X" else "X"
+        for coup in self.lister_les_coups_possibles(self.plateau, cube):
+            self.deplacer_un_cube(coup["origine"], coup["direction"])
+            if self.determiner_vainqueur() == adversaire:
+                self.annuler_deplacement()
+                return coup
+        return None
+
+    def jouer_un_coup(self, cube):
+        if self.partie_terminée():
+            raise QuixoError("La partie est déjà terminée.")
+        if cube not in ["X", "O"]:
+            raise QuixoError('Le symbole doit être "X" ou "O".')
+        
+        coup_vainqueur = self.trouver_un_coup_vainqueur(cube)
+        if coup_vainqueur:
+            self.deplacer_un_cube(coup_vainqueur["origine"], coup_vainqueur["direction"])
+            return coup_vainqueur
+
+        coup_bloquant = self.trouver_un_coup_bloquant(cube)
+        if coup_bloquant:
+            self.deplacer_un_cube(coup_bloquant["origine"], coup_bloquant["direction"])
+            return coup_bloquant
+
+        # Coup aléatoire sinon
+        coups_possibles = self.lister_les_coups_possibles(self.plateau, cube)
+        coup_choisi = random.choice(coups_possibles)
+        self.deplacer_un_cube(coup_choisi["origine"], coup_choisi["direction"])
+        return coup_choisi
