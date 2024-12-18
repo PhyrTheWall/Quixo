@@ -1,219 +1,150 @@
-"""Module Plateau
+"""Module Quixo
 
 Classes:
-    * Plateau - Classe principale du plateau de jeu Quixo.
+    * Quixo - Classe principale du jeu Quixo.
+    * QuixoError - Classe d'erreur pour le jeu Quixo.
+
+Functions:
+    * interpréter_la_commande - Génère un interpréteur de commande.
 """
 
-from copy import deepcopy
+import argparse
 
 from quixo_error import QuixoError
 
+from plateau import Plateau
 
-class Plateau:
-    """docstring...
-"""
-    def __init__(self, plateau=None):
-        """Constructeur de la classe Plateau
+
+class Quixo:
+    """Classe representant le jeux de quixo..."""
+    def __init__(self, joueurs, plateau=None) -> None:
+        """Constructeur de la classe Quixo
 
         Vous ne devez rien modifier dans cette méthode.
 
         Args:
+            joueurs (list[str]): La liste des deux joueurs.
+                Le premier joueur possède le symbole "X" et le deuxième "O".
             plateau (list[list[str]], optional): La représentation du plateau
                 tel que retourné par le serveur de jeu ou la valeur None par défaut.
         """
-        self.plateau = self.générer_le_plateau(deepcopy(plateau))
+        self.joueurs = joueurs
+        self.plateau = Plateau(plateau)
 
-    def état_plateau(self):
-        """Retourne une copie du plateau
+    def état_partie(self):
+        """Retourne une copie du jeu
 
-        Retourne une copie du plateau pour éviter les effets de bord.
+        Retourne une copie du jeu pour éviter les effets de bord.
         Vous ne devez rien modifier dans cette méthode.
 
         Returns:
-            list[list[str]]: La représentation du plateau
-            tel que retourné par le serveur de jeu.
+            dict: La représentation du jeu tel que retourné par le serveur de jeu.
         """
-        return deepcopy(self.plateau)
+        return {
+            "joueurs": self.joueurs,
+            "plateau": self.plateau.état_plateau(),
+        }
 
     def __str__(self):
-        """Retourne une représentation en chaîne de caractères du plateau
+        """Retourne une représentation en chaîne de caractères de la partie
 
-        Déplacer le code de votre fonction formater_plateau ici et ajuster le en conséquence.
+        Déplacer le code de vos fonctions formater_légende et formater_jeu ici.
+        Adaptez votre code en conséquence et faites appel à Plateau
+        pour obtenir la représentation du plateau.
 
         Returns:
             str: Une représentation en chaîne de caractères du plateau.
         """
-        return ("   -------------------\n"
-                + "1 | " + " | ".join(self.plateau[0]) + " |\n"
-                + "  |---|---|---|---|---|\n"
-                + "2 | " + " | ".join(self.plateau[1]) + " |\n"
-                + "  |---|---|---|---|---|\n"
-                + "3 | " + " | ".join(self.plateau[2]) + " |\n"
-                + "  |---|---|---|---|---|\n"
-                + "4 | " + " | ".join(self.plateau[3]) + " |\n"
-                + "  |---|---|---|---|---|\n"
-                + "5 | " + " | ".join(self.plateau[4]) + " |\n"
-                + "--|---|---|---|---|---|\n"
-                + "  | 1   2   3   4   5 |\n")
+        return ("Légende:\n"
+                + f"   X={self.état_partie()['joueurs'][0]}\n"
+                + f"   O={self.état_partie()['joueurs'][1]}\n"
+                + f"{Plateau(self.état_partie()['plateau'])}")
 
-    def __getitem__(self, position):
-        """Retourne la valeur à la position donnée
+    def déplacer_pion(self, pion, origine, direction):
+        """Déplacer un pion dans une direction donnée.
+
+        Applique le changement au Plateau de jeu
 
         Args:
-            position (tuple[int, int]): La position (x, y) du cube sur le plateau.
+            pion (str): Le pion à déplacer, soit "X" ou "O".
+            origine (list[int]): La position (x, y) du pion sur le plateau.
+            direction (str): La direction du déplacement, soit "haut", "bas", "gauche" ou "droite".
+        """
+        self.plateau.insérer_un_cube(pion, origine, direction)
+
+    def choisir_un_coup(self):
+        """Demander le prochain coup à jouer au joueur.
+
+        Déplacer le code de votre fonction récupérer_le_coup ici et ajuster le en conséquence.
+        Vous devez maintenant valider les entrées de l'utilisateur.
 
         Returns:
-            str: La valeur à la position donnée, soit "X", "O" ou " ".
+            tuple: Tuple de 2 éléments composé de l'origine du bloc à déplacer et de sa direction.
+                L'origine est une liste de 2 entiers [x, y].
+                La direction est une chaîne de caractères.
 
         Raises:
             QuixoError: Les positions x et y doivent être entre 1 et 5 inclusivement.
-        """
-        x, y = position
-        if not (0 <= x < 5 and 0 <= y < 5):
-            raise IndexError("Les indices doivent être compris entre 0 et 4.")
-        return self.plateau[x][y]
-
-    def __setitem__(self, position, valeur):
-        """Modifie la valeur à la position donnée
-
-        Args:
-            position (tuple[int, int]): La position (x, y) du cube sur le plateau.
-            value (str): La valeur à insérer à la position donnée, soit "X", "O" ou " ".
-
-        Raises:
-            QuixoError: Les positions x et y doivent être entre 1 et 5 inclusivement.
-            QuixoError: Valeur du cube invalide.
-        """
-        valeurs = ["X", "O", " "]
-        x, y = position
-        if (x or y) > 5 or (x or y) < 1:
-            raise QuixoError(" Les positions x et y doivent"
-                             + "être entre 1 et 5 inclusivement.")
-        if valeur not in valeurs:
-            raise QuixoError("Valeur du cube invalide.")
-        self.plateau[y-1][x-1] = valeur
-
-    def générer_le_plateau(self, plateau):
-        """Génère un plateau de jeu
-
-        Si un plateau est fourni, il est retourné tel quel.
-        Sinon, si la valeur est None, un plateau vide de 5x5 est retourné.
-
-        Args:
-            plateau (list[list[str]] | None): La représentation du plateau
-                tel que retourné par le serveur de jeu ou la valeur None.
-
-        Returns:
-            list[list[str]]: La représentation du plateau
-                tel que retourné par le serveur de jeu.
-
-        Raises:
-            QuixoError: Format du plateau invalide.
-            QuixoError: Valeur du cube invalide.
-        """
-        if plateau is None:
-            return [[" ", " ", " ", " ", " "],
-                    [" ", " ", " ", " ", " "],
-                    [" ", " ", " ", " ", " "],
-                    [" ", " ", " ", " ", " "],
-                    [" ", " ", " ", " ", " "]]
-
-        pions_valides = ["X", "O", " "]
-        # liste de tous les caracteres dans le plateau qui sont valides
-        for lignes in plateau:
-            for pion in lignes:
-                if pion in pions_valides:
-                    continue
-                raise QuixoError("Valeur du cube invalide.")
-        # verification des dimentions
-        if len(plateau) != 5:
-            raise QuixoError("Format de plateau invalide.")
-        for lignes in range(5):
-            if len(plateau[lignes]) != 5:
-                raise QuixoError("Format de plateau invalide.")
-        return plateau
-
-    def insérer_un_cube(self, cube, origine, direction):
-        """Insère un cube dans le plateau
-
-        Cette méthode appelle la méthode d'insertion appropriée selon la direction donnée.
-
-        À noter que la validation des positions sont faites dans
-        les méthodes __setitem__ et __getitem__. Vous devez donc en faire usage dans
-        les diverses méthodes d'insertion pour vous assurez que les positions sont valides.
-
-        Args:
-            cube (str): La valeur du cube à insérer, soit "X" ou "O".
-            origine (list[int]): La position [x, y] d'origine du cube à insérer.
-            direction (str): La direction de l'insertion, soit "haut", "bas", "gauche" ou "droite".
-
-        Raises:
             QuixoError: La direction doit être "haut", "bas", "gauche" ou "droite".
-            QuixoError: Le cube à insérer ne peut pas être vide.
+
+        Examples:
+            Donnez la position d'origine du bloc (x,y) :
+            Quelle direction voulez-vous insérer? ('haut', 'bas', 'gauche', 'droite') :
         """
-        directions_possibles = ["haut", "bas", "gauche", "droite"]
-        if direction not in directions_possibles:
-            raise QuixoError('La direction doit être "haut",'
-                             +' "bas", "gauche" ou "droite".')
-        if cube == " ":
-            raise QuixoError("Le cube à insérer ne peut pas être vide.")
-        if direction == "bas":
-            self.insérer_par_le_bas(cube, origine)
-        if direction == "haut":
-            self.insérer_par_le_haut(cube, origine)
-        if direction == "gauche":
-            self.insérer_par_la_gauche(cube, origine)
-        if direction == "droite":
-            self.insérer_par_la_droite(cube, origine)
+        directions_valide = ['haut', 'bas', 'gauche', 'droite']
 
-    def insérer_par_le_bas(self, cube, origine):
-        """Insère un cube dans le plateau en direction du bas
+        ori = input("Donnez la position d'origine du bloc (x,y) :")
+        origine = [int(ori[0]), int(ori[2])]
+        direction = input("Direction d'insertion du bloc?"
+                          " ('haut', 'bas', 'gauche', 'droite') :")
 
-        Args:
-            cube (str): La valeur du cube à insérer, soit "X" ou "O".
-            origine (list[int]): La position [x, y] d'origine du cube à insérer.
-        """
-        x, y = origine[0], origine[1]
-        plat = self
-        for i in range(y, 5):
-            self[(x, i)] = plat[(x, i + 1)]
-        self[(x, 5)] = cube
+        if (origine[0] or origine[1]) > 5 or (origine[0] or origine[1]) < 1:
+            raise QuixoError("Les positions x et y doivent être entre 1 et 5 inclusivement.")
+        if direction not in directions_valide:
+            raise QuixoError('La direction doit être "haut", "bas", "gauche" ou "droite".')
 
-    def insérer_par_le_haut(self, cube, origine):
-        """Insère un cube dans le plateau en direction du haut
+        return origine, direction
 
-        Args:
-            cube (str): La valeur du cube à insérer, soit "X" ou "O".
-            origine (list[int]): La position [x, y] d'origine du cube à insérer.
-        """
-        x, y = origine
-        plat = self
-        for i in range(y, 1, -1):
-            self[(x, i)] = plat[(x, i - 1)]
-        self[(x ,1)] = cube
+def interpréter_la_commande():
+    """Génère un interpréteur de commande.
+    Returns:
+        Namespace: Un objet Namespace tel que retourné par parser.parse_args().
+            Cet objet aura l'attribut «idul» représentant l'idul du joueur
+            et l'attribut «parties» qui est un booléen True/False.
+    """
+    parser = argparse.ArgumentParser(description="Quixo")
+    parser.add_argument('idul', type=str, help= 'IDUL du joueur')
+    # Option pour jouer de façon autonome contre l'IA
+    parser.add_argument(
+        '-a', '--autonome', 
+        action="store_true", 
+        help="Jouer de façon autonome"
+    )
+    # Complétez le code ici
+    # vous pourriez aussi avoir à ajouter des arguments dans ArgumentParser(...)
 
-    def insérer_par_la_gauche(self, cube, origine):
-        """Insère un cube dans le plateau en direction de la gauche
+    return parser.parse_args()
 
-        Args:
-            cube (str): La valeur du cube à insérer, soit "X" ou "O".
-            origine (list[int]): La position [x, y] d'origine du cube à insérer.
-        """
-        x, y = origine[0], origine[1]
-        plat = self
-        for i in range(x, 1, -1):
-            self[(i, y)] = plat[(i - 1, y)]
-        self[(1,y)] = cube
+def determiner_vainqueur(self):
+        # Vérification des lignes horizontales
+        for i in range(5):
+            ligne = self.plateau.get_ligne(i)  # Méthode qui renvoie la i-ème ligne sous forme de liste
+            if len(set(ligne)) == 1 and ligne[0] != " ":
+                return ligne[0]
+            
+            # Vérification des lignes verticales
+            colonne = self.plateau.get_colonne(i)  # Méthode qui renvoie la i-ème colonne sous forme de liste
+            if len(set(colonne)) == 1 and colonne[0] != " ":
+                return colonne[0]
 
-    def insérer_par_la_droite(self, cube, origine):
-        """Insère un cube dans le plateau en direction de la droite
+        # Vérification des diagonales
+        diagonale1 = [self.plateau.get_case(i, i) for i in range(5)]  # Méthode pour obtenir la diagonale principale
+        diagonale2 = [self.plateau.get_case(i, 4 - i) for i in range(5)]  # Méthode pour obtenir l'autre diagonale
+        
+        if len(set(diagonale1)) == 1 and diagonale1[0] != " ":
+            return diagonale1[0]
+        if len(set(diagonale2)) == 1 and diagonale2[0] != " ":
+            return diagonale2[0]
 
-        Args:
-            cube (str): La valeur du cube à insérer, soit "X" ou "O".
-            origine (list[int]): La position [x, y] d'origine du cube à insérer.
-        """
-        x, y = origine[0], origine[1]
-        plat = self
-        for i in range(x, 5):
-            self[(i, y)] = plat[(i + 1, y)]
-        self[(5,y)] = cube
+        # Aucun vainqueur
+        return None
