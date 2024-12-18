@@ -31,26 +31,7 @@ class QuixoIA(Quixo):
                 resultats[joueur][taille] = nombre
         
         return resultats
-    
-    def verifier_vainqueur(self, plateau):
-        for i in range(5):
-            # Vérification des lignes horizontales
-            if len(set(plateau[i])) == 1 and plateau[i][0] != " ":
-                return plateau[i][0]
-        
-        # Vérification des colonnes verticales
-        colonne = [plateau[j][i] for j in range(5)]
-        if len(set(colonne)) == 1 and colonne[0] != " ":
-            return colonne[0]
-        # Vérification des diagonales
-        diagonale1 = [plateau[i][i] for i in range(5)]
-        diagonale2 = [plateau[i][4 - i] for i in range(5)]  
-        if len(set(diagonale1)) == 1 and diagonale1[0] != " ":
-            return diagonale1[0]
-        if len(set(diagonale2)) == 1 and diagonale2[0] != " ":
-            return diagonale2[0]
-        return None  # Aucun vainqueur
-    
+
     def partie_terminée(self):
         # Utilisation de la méthode determiner_vainqueur() héritée de Quixo
         vainqueur = self.determiner_vainqueur()
@@ -121,6 +102,7 @@ class QuixoIA(Quixo):
             return diagonale1[0]
         if len(set(diagonale2)) == 1 and diagonale2[0] != " ":
             return diagonale2[0]
+
     # Si aucune ligne, colonne ou diagonale n'est remplie, il n'y a pas de vainqueur
         return None
         
