@@ -2,12 +2,15 @@ from quixo import Quixo, QuixoError
 import random
 
 class QuixoIA(Quixo):
+    def __init__(self, joueurs, plateau=None):
+        super().__init__(joueurs, plateau)  # Appel au constructeur de la classe Quixo
+
     def lister_les_coups_possibles(self, plateau, cube):
         if cube not in ["X", "O"]:
             raise QuixoError('Le cube doit être "X" ou "O".')
         if self.partie_terminée():
             raise QuixoError("La partie est déjà terminée.")
-        
+
         coups = []
         for i in range(5):
             for j in range(5):
@@ -28,10 +31,30 @@ class QuixoIA(Quixo):
                 resultats[joueur][taille] = nombre
         
         return resultats
-
+    
+    def verifier_vainqueur(self, plateau):
+        for i in range(5):
+            # Vérification des lignes horizontales
+            if len(set(plateau[i])) == 1 and plateau[i][0] != " ":
+                return plateau[i][0]
+        
+        # Vérification des colonnes verticales
+        colonne = [plateau[j][i] for j in range(5)]
+        if len(set(colonne)) == 1 and colonne[0] != " ":
+            return colonne[0]
+        # Vérification des diagonales
+        diagonale1 = [plateau[i][i] for i in range(5)]
+        diagonale2 = [plateau[i][4 - i] for i in range(5)]  
+        if len(set(diagonale1)) == 1 and diagonale1[0] != " ":
+            return diagonale1[0]
+        if len(set(diagonale2)) == 1 and diagonale2[0] != " ":
+            return diagonale2[0]
+        return None  # Aucun vainqueur
+    
     def partie_terminée(self):
+        # Utilisation de la méthode determiner_vainqueur() héritée de Quixo
         vainqueur = self.determiner_vainqueur()
-        return vainqueur
+        return vainqueur is not None  # Si un vainqueur est trouvé, la partie est terminée
 
     def trouver_un_coup_vainqueur(self, cube):
         for coup in self.lister_les_coups_possibles(self.plateau, cube):
@@ -53,9 +76,11 @@ class QuixoIA(Quixo):
     def jouer_un_coup(self, cube):
         if self.partie_terminée():
             raise QuixoError("La partie est déjà terminée.")
+    
+        # Vérification supplémentaire du cube
         if cube not in ["X", "O"]:
-            raise QuixoError('Le symbole doit être "X" ou "O".')
-        
+            raise QuixoError(f"Le symbole doit être 'X' ou 'O'. Mais reçu : {cube}")
+
         coup_vainqueur = self.trouver_un_coup_vainqueur(cube)
         if coup_vainqueur:
             self.deplacer_un_cube(coup_vainqueur["origine"], coup_vainqueur["direction"])
@@ -71,3 +96,31 @@ class QuixoIA(Quixo):
         coup_choisi = random.choice(coups_possibles)
         self.deplacer_un_cube(coup_choisi["origine"], coup_choisi["direction"])
         return coup_choisi
+    # Ajout de la méthode determiner_vainqueur
+    def determiner_vainqueur(self):
+
+        # Logique pour déterminer si un joueur a gagné
+        # Par exemple, si une ligne entière est remplie avec le même cube (X ou O)
+        
+        for i in range(5):
+            # Vérifier les lignes horizontales
+            ligne = [self.plateau[i, j] for j in range(5)]  # Utilisation du bon index (i, j)
+            if len(set(ligne)) == 1 and ligne[0] != " ":
+                return ligne[0]
+        
+            # Vérifier les lignes verticales
+            colonne = [self.plateau[j, i] for j in range(5)]  # Utilisation du bon index (j, i)
+            if len(set(colonne)) == 1 and colonne[0] != " ":
+                return colonne[0]
+
+        # Vérification des diagonales
+        diagonale1 = [self.plateau[i, i] for i in range(5)]
+        diagonale2 = [self.plateau[i, 4 - i] for i in range(5)]
+    
+        if len(set(diagonale1)) == 1 and diagonale1[0] != " ":
+            return diagonale1[0]
+        if len(set(diagonale2)) == 1 and diagonale2[0] != " ":
+            return diagonale2[0]
+    # Si aucune ligne, colonne ou diagonale n'est remplie, il n'y a pas de vainqueur
+        return None
+        
