@@ -114,8 +114,37 @@ def interpréter_la_commande():
     """
     parser = argparse.ArgumentParser(description="Quixo")
     parser.add_argument('idul', type=str, help= 'IDUL du joueur')
-    parser.add_argument('parties', action="store_true", help='Parties en cours')
+    # Option pour jouer de façon autonome contre l'IA
+    parser.add_argument(
+        '-a', '--autonome', 
+        action="store_true", 
+        help="Jouer de façon autonome"
+    )
     # Complétez le code ici
     # vous pourriez aussi avoir à ajouter des arguments dans ArgumentParser(...)
 
     return parser.parse_args()
+
+def determiner_vainqueur(self):
+        # Vérification des lignes horizontales
+        for i in range(5):
+            ligne = self.plateau.get_ligne(i)  # Méthode qui renvoie la i-ème ligne sous forme de liste
+            if len(set(ligne)) == 1 and ligne[0] != " ":
+                return ligne[0]
+            
+            # Vérification des lignes verticales
+            colonne = self.plateau.get_colonne(i)  # Méthode qui renvoie la i-ème colonne sous forme de liste
+            if len(set(colonne)) == 1 and colonne[0] != " ":
+                return colonne[0]
+
+        # Vérification des diagonales
+        diagonale1 = [self.plateau.get_case(i, i) for i in range(5)]  # Méthode pour obtenir la diagonale principale
+        diagonale2 = [self.plateau.get_case(i, 4 - i) for i in range(5)]  # Méthode pour obtenir l'autre diagonale
+        
+        if len(set(diagonale1)) == 1 and diagonale1[0] != " ":
+            return diagonale1[0]
+        if len(set(diagonale2)) == 1 and diagonale2[0] != " ":
+            return diagonale2[0]
+
+        # Aucun vainqueur
+        return None
